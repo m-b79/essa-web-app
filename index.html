@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESSA | Club</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="topbar__brand" href="#home" data-page-link="home">
+          <span class="topbar__crest"><img id="club-logo-top" alt="Logo ESSA" /></span>
+          <span class="topbar__text">
+            <strong>ESSA</strong>
+            <span>Etoile Sportive St Amand Sur Sevre</span>
+          </span>
+        </a>
+
+        <nav class="topbar__nav" id="primary-nav" aria-label="Navigation principale"></nav>
+
+        <button class="topbar__auth" id="connect-button" type="button">Connexion</button>
+      </header>
+
+      <div class="subnav" id="subnav" aria-label="Navigation secondaire"></div>
+
+      <main class="page-stack">
+        <section class="page page--home is-visible" id="page-home" data-page="home">
+          <div class="home-hero">
+            <div class="home-hero__visual">
+              <div class="home-hero__image" id="hero-image">
+                <div class="home-hero__image-overlay">
+                  <p class="eyebrow">ESSA</p>
+                  <h1 id="home-title">Bienvenue à l'Etoile Sportive St Amand Sur Sevre</h1>
+                  <p id="home-subtitle">Suivez les matchs, le classement et les équipes du club.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-hero__content">
+              <div class="home-hero__intro">
+                <p class="home-hero__kicker">Club · Football · ESSA</p>
+                <h2>Une vitrine éditoriale, un accès direct à l'essentiel.</h2>
+                <p class="home-hero__copy" id="club-meta">Chargement du club...</p>
+                <div class="home-hero__actions">
+                  <button class="action-btn action-btn--primary" id="enter-site" type="button">Entrer sur le site</button>
+                  <button class="action-btn action-btn--secondary" data-page-link="calendar" type="button">Voir le calendrier</button>
+                </div>
+              </div>
+
+              <div class="mini-stats" id="hero-stats">
+                <div class="stat-card">
+                  <span class="stat-card__label">Équipes</span>
+                  <strong class="stat-card__value" id="stat-teams">-</strong>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-card__label">À venir</span>
+                  <strong class="stat-card__value" id="stat-calendar">-</strong>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-card__label">Résultats</span>
+                  <strong class="stat-card__value" id="stat-results">-</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="home-grid">
+            <article class="hero-card hero-card--featured">
+              <div class="hero-card__top">
+                <span class="badge">Prochain match</span>
+                <span id="next-match-status" class="muted"></span>
+              </div>
+              <h3 id="next-match-title">Chargement...</h3>
+              <p id="next-match-details" class="muted"></p>
+              <div class="meta-row" id="next-match-meta"></div>
+            </article>
+
+            <article class="hero-card">
+              <div class="hero-card__top">
+                <span class="badge badge--ghost">Dernier résultat</span>
+              </div>
+              <h3 id="last-result-title">Chargement...</h3>
+              <p id="last-result-details" class="muted"></p>
+            </article>
+
+            <article class="hero-card">
+              <div class="hero-card__top">
+                <span class="badge badge--ghost">Calendrier</span>
+              </div>
+              <h3 id="welcome-calendar-title">Chargement...</h3>
+              <p id="welcome-calendar-details" class="muted"></p>
+              <button class="ghost-link" data-page-link="calendar" type="button">Ouvrir le calendrier</button>
+            </article>
+
+            <article class="hero-card">
+              <div class="hero-card__top">
+                <span class="badge badge--ghost">Actualités</span>
+              </div>
+              <h3>En attente de publication</h3>
+              <p class="muted">Cet espace est prêt pour les news du club, même s'il est vide pour le moment.</p>
+            </article>
+
+            <article class="hero-card">
+              <div class="hero-card__top">
+                <span class="badge badge--ghost">Classement</span>
+              </div>
+              <h3 id="welcome-standing-title">Chargement...</h3>
+              <p id="welcome-standing-details" class="muted"></p>
+              <button class="ghost-link" data-page-link="standings" type="button">Voir le classement</button>
+            </article>
+
+            <article class="hero-card">
+              <div class="hero-card__top">
+                <span class="badge badge--ghost">Équipes</span>
+              </div>
+              <h3 id="welcome-teams-title">Chargement...</h3>
+              <p id="welcome-teams-details" class="muted"></p>
+              <button class="ghost-link" data-page-link="teams" type="button">Voir les équipes</button>
+            </article>
+          </div>
+
+          <section class="home-section" id="admin-hub">
+            <div class="section__title section__title--tight">
+              <div>
+                <h2>Éspace connecté</h2>
+                <p class="muted">Prévu pour publier, administrer et enrichir le contenu plus tard.</p>
+              </div>
+              <span class="badge badge--ghost">Privé</span>
+            </div>
+            <div class="admin-grid">
+              <article class="admin-card">
+                <strong>Connexion</strong>
+                <p class="muted">Zone réservée aux membres du club et aux contributeurs.</p>
+              </article>
+              <article class="admin-card">
+                <strong>Publier une actu</strong>
+                <p class="muted">Slot prêt pour les nouvelles, communiqués et annonces.</p>
+              </article>
+              <article class="admin-card">
+                <strong>Gérer la home</strong>
+                <p class="muted">Emplacement prévu pour les modules éditoriaux et les bannières.</p>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="page" id="page-calendar" data-page="calendar">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Calendrier</p>
+              <h2>Prochains matchs du club</h2>
+              <p class="muted">Timeline des rencontres, par journée ou par période.</p>
+            </div>
+            <span class="badge badge--ghost" id="calendar-count">0 matchs</span>
+          </div>
+          <div id="calendar-list" class="list"></div>
+        </section>
+
+        <section class="page" id="page-results" data-page="results">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Résultats</p>
+              <h2>Dernières rencontres</h2>
+              <p class="muted">Les scores et les dates les plus récents.</p>
+            </div>
+            <span class="badge badge--ghost" id="results-count">0 résultats</span>
+          </div>
+          <div id="results-list" class="list"></div>
+        </section>
+
+        <section class="page" id="page-news" data-page="news">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Actualités</p>
+              <h2>Le club en une</h2>
+              <p class="muted">Un espace vide aujourd’hui, prêt pour les prochains articles et annonces.</p>
+            </div>
+          </div>
+          <div class="hero-card hero-card--featured">
+            <span class="badge">En attente</span>
+            <h3>Aucune actualité publiée pour le moment.</h3>
+            <p class="muted">Cette section est prête pour les articles, visuels et communiqués du club.</p>
+          </div>
+        </section>
+
+        <section class="page" id="page-standings" data-page="standings">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Classement</p>
+              <h2>Classements du club</h2>
+              <p class="muted">Classements calculés à partir des matchs de championnat uniquement.</p>
+            </div>
+          </div>
+          <div class="standings-stack">
+            <article class="standings-block">
+              <div class="section__title section__title--tight">
+                <div>
+                  <h3>Équipe 1</h3>
+                  <p class="muted" id="standings-team1-meta">Chargement...</p>
+                </div>
+                <span class="badge badge--ghost" id="standings-team1-count">0 équipes</span>
+              </div>
+              <div class="table-wrap">
+                <table class="standings-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Équipe</th>
+                      <th>Pts</th>
+                      <th>J</th>
+                      <th>G</th>
+                      <th>N</th>
+                      <th>P</th>
+                      <th>F</th>
+                      <th>BP</th>
+                      <th>BC</th>
+                      <th>Pé</th>
+                      <th>Diff</th>
+                    </tr>
+                  </thead>
+                  <tbody id="standings-team1-table">
+                    <tr><td colspan="12" class="standings-empty">Chargement du classement...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="standings-block">
+              <div class="section__title section__title--tight standings-block__head">
+                <div>
+                  <h3>Équipe 2</h3>
+                  <p class="muted" id="standings-team2-meta">Chargement...</p>
+                </div>
+                <span class="badge badge--ghost" id="standings-team2-count">0 équipes</span>
+                <div class="standings-switch" role="tablist" aria-label="Niveau de l'équipe 2">
+                  <button class="chip chip--sm chip--active" data-standings-team2-level="1" type="button">1er niveau</button>
+                  <button class="chip chip--sm" data-standings-team2-level="2" type="button">2ème niveau</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="standings-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Équipe</th>
+                      <th>Pts</th>
+                      <th>J</th>
+                      <th>G</th>
+                      <th>N</th>
+                      <th>P</th>
+                      <th>F</th>
+                      <th>BP</th>
+                      <th>BC</th>
+                      <th>Pé</th>
+                      <th>Diff</th>
+                    </tr>
+                  </thead>
+                  <tbody id="standings-team2-table">
+                    <tr><td colspan="12" class="standings-empty">Chargement du classement...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="page" id="page-teams" data-page="teams">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Équipes</p>
+              <h2>Organisation du club</h2>
+              <p class="muted">Vue mixte: cartes, liste et engagements.</p>
+            </div>
+          </div>
+          <div id="teams-list" class="teams-stack"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
