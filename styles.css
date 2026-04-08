@@ -345,10 +345,23 @@ body { padding: 20px; color-scheme: dark; }
   .subnav { gap: 8px; }
   .page { padding: 16px; gap: 14px; }
   .home-hero__image { padding: 18px; }
+  .home-hero__image-overlay h1 { font-size: clamp(1.85rem, 9vw, 2.6rem); }
   .home-hero__intro { padding: 18px; }
+  .home-hero__actions { display: grid; grid-template-columns: 1fr; }
+  .action-btn { width: 100%; justify-content: center; }
   .home-grid, .mini-stats { grid-template-columns: 1fr; }
   .hero-card--featured { min-height: 220px; }
   .list-item__grid { grid-template-columns: 1fr; }
   .list-item__score { text-align: left; }
-  .standings-table { min-width: 860px; }
+  .standings-table { min-width: 620px; }
+  .standings-table th:nth-child(8),
+  .standings-table td:nth-child(8),
+  .standings-table th:nth-child(11),
+  .standings-table td:nth-child(11) {
+    display: none;
+  }
+  .standings-table th,
+  .standings-table td { padding: 10px 8px; font-size: .84rem; }
+  .standings-table .rank-badge { width: 28px; height: 28px; }
+  .standings-table .team-name { gap: 8px; }
 }

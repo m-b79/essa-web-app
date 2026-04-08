@@ -51,6 +51,11 @@ npm run build
 - tests unitaires des transformations de données et du cache
 - workflow CI pour `npm test` et `npm run build`
 
+## `v1.3.0`
+
+- hero mobile plus compact
+- tableau de classement allégé sur petit écran
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`

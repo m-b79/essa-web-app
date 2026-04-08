@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Improved the mobile hero layout and CTA stacking.
+- Reduced standings table density on small screens.
+
 ## 1.2.0
 
 - Added unit tests for data transforms and cache helpers.
