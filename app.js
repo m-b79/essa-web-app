@@ -3,6 +3,7 @@ const TEAM_FALLBACK_NAME = 'Équipe 1';
 
 const NAV_ITEMS = [
   { label: 'Accueil', page: 'home' },
+  { label: 'Le club', page: 'club' },
   { label: 'Calendrier', page: 'calendar' },
   { label: 'Résultats', page: 'results' },
   { label: 'Classement', page: 'standings' },
@@ -13,8 +14,14 @@ const NAV_ITEMS = [
 const SUBNAV = {
   home: [
     { label: 'À la une', target: 'page-home' },
+    { label: 'Le club', page: 'club' },
     { label: 'Calendrier', page: 'calendar' },
     { label: 'Équipes', page: 'teams' },
+  ],
+  club: [
+    { label: 'Identité', target: 'club-identity' },
+    { label: 'Histoire', target: 'club-history' },
+    { label: 'Infos pratiques', target: 'club-practical' },
   ],
   calendar: [
     { label: 'Tous', filter: 'all' },
@@ -132,10 +139,22 @@ function applySnapshot(snapshot) {
     team2: { 1: [], 2: [] },
   };
 
-  document.querySelector('#club-meta').textContent = `${CLUB_PROFILE.city} · Fondation ${CLUB_PROFILE.founded} · ${CLUB_PROFILE.stadium}`;
+  document.querySelector('#club-meta').textContent = `Depuis ${CLUB_PROFILE.founded}`;
   const clubTitleLong = document.querySelector('#club-title-long');
   if (clubTitleLong) clubTitleLong.textContent = CLUB_PROFILE.longName;
   document.querySelector('#club-logo-top').src = clubLogoSrc;
+
+  const clubPageFields = {
+    '#club-page-fullname': CLUB_PROFILE.longName,
+    '#club-page-city': CLUB_PROFILE.city,
+    '#club-page-founded': CLUB_PROFILE.founded,
+    '#club-page-stadium': CLUB_PROFILE.stadium,
+    '#club-page-address': CLUB_PROFILE.address,
+  };
+  Object.entries(clubPageFields).forEach(([selector, value]) => {
+    const element = document.querySelector(selector);
+    if (element) element.textContent = value;
+  });
 
   document.querySelector('#welcome-calendar-title').textContent = `${state.calendar.length} matchs programmés`;
   document.querySelector('#welcome-calendar-details').textContent = `Vue directe sur les prochaines rencontres du club.`;

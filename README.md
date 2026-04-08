@@ -60,6 +60,12 @@ npm run build
 
 - identité visible alignée sur ESSA et Saint-Amantaise
 
+## `v1.4.0`
+
+- onglet `Le club` dédié
+- accueil allégé avec un simple repère `Depuis 1938`
+- infos pratiques déplacées vers la page du club
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`

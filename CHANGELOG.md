@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Added a dedicated `Le club` page with the visible club identity and practical details.
+- Simplified the home page to keep only the short `Depuis 1938` cue.
+
 ## 1.3.1
 
 - Updated the visible club identity to match ESSA / Saint-Amantaise naming.
