@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ESSA | Club</title>
     <link rel="stylesheet" href="/styles.css" />
+    <script>
+      (() => {
+        try {
+          if (localStorage.getItem('essa-web-app:v1:theme') === 'dark') {
+            document.documentElement.classList.add('theme-dark');
+          }
+        } catch {
+          // Ignore storage failures.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -19,6 +30,10 @@
         </a>
 
         <nav class="topbar__nav" id="primary-nav" aria-label="Navigation principale"></nav>
+
+        <div class="topbar__tools">
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Thème sombre</button>
+        </div>
 
       </header>
 

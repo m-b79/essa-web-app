@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+- Added a light/dark theme switch with light mode as the default.
+
 ## 1.4.1
 
 - Added a social footer with Instagram and Facebook links.

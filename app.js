@@ -68,6 +68,7 @@ const state = {
 
 const CACHE_KEY = 'essa-web-app:v1:last-known-good';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const THEME_KEY = 'essa-web-app:v1:theme';
 const clubLogoSrc = '/logo-essa.svg';
 const CLUB_PROFILE = {
   longName: 'Étoile sportive Saint-Amantaise',
@@ -83,7 +84,37 @@ const homeSection = document.querySelector('#page-home');
 const pageSections = [...document.querySelectorAll('.page')];
 const dataStatus = document.querySelector('#data-status');
 const refreshDataButton = document.querySelector('#refresh-data');
+const themeToggleButton = document.querySelector('#theme-toggle');
 const standingsAsOf = new URL(window.location.href).searchParams.get('asOf') || new Date().toISOString().slice(0, 10);
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+function applyTheme(theme) {
+  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.classList.toggle('theme-dark', nextTheme === 'dark');
+  document.documentElement.classList.toggle('theme-light', nextTheme !== 'dark');
+
+  if (themeToggleButton) {
+    themeToggleButton.textContent = nextTheme === 'dark' ? 'Thème clair' : 'Thème sombre';
+    themeToggleButton.setAttribute('aria-pressed', nextTheme === 'dark' ? 'true' : 'false');
+    themeToggleButton.setAttribute('aria-label', nextTheme === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre');
+  }
+}
+
+function setTheme(theme) {
+  applyTheme(theme);
+  try {
+    localStorage.setItem(THEME_KEY, theme === 'dark' ? 'dark' : 'light');
+  } catch {
+    // Ignore storage failures.
+  }
+}
 
 function readCache() {
   try {
@@ -773,6 +804,10 @@ refreshDataButton?.addEventListener('click', () => {
   });
 });
 
+themeToggleButton?.addEventListener('click', () => {
+  setTheme(document.documentElement.classList.contains('theme-dark') ? 'light' : 'dark');
+});
+
 document.querySelectorAll('.topbar__nav [data-page]').forEach((button) => {
   button.addEventListener('click', () => {
     setActivePage(button.dataset.page);
@@ -793,6 +828,7 @@ setStandingsFilter('all');
 renderPrimaryNav();
 setActivePage('home');
 renderSubnav();
+applyTheme(getStoredTheme());
 loadData().catch((error) => {
   console.error(error);
   document.querySelector('#club-meta').textContent = 'Erreur de chargement des données API';

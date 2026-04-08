@@ -70,6 +70,11 @@ npm run build
 
 - footer social avec Instagram et Facebook
 
+## `v1.5.0`
+
+- switch de thème clair/sombre
+- thème clair par défaut
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`
