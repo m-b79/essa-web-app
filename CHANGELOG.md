@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- Added a 24h `localStorage` fallback cache with manual refresh.
+- Clarified empty states across the public pages.
+
 ## 1.0.0
 
 - Public site only: home, calendar, results, standings, teams, news.

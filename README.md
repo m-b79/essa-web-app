@@ -29,7 +29,8 @@ npm run build
 - proxy local vers l'API FFF via `/api/*`
 - classement calculé côté client à une date de référence (`?asOf=YYYY-MM-DD` pour ajuster)
 - dernier chargement conservé en `localStorage` comme secours si l'API tombe
-- site public uniquement pour `v1.0.0`; les fonctions admin / login / CMS sont réservées aux versions futures
+- cache local expirant après 24h, avec rafraîchissement manuel depuis l'accueil
+- site public uniquement; les fonctions admin / login / CMS sont réservées aux versions futures
 
 ## `v1.0.0`
 
@@ -38,6 +39,12 @@ npm run build
 - gestion des états de chargement et d'erreur sur la page d'accueil
 - support mobile et clavier de base
 - scripts `npm test` et `npm run build`
+
+## `v1.1.0`
+
+- cache local last-known-good avec expiration
+- bouton de rafraîchissement manuel
+- empty states plus explicites sur les pages publiques
 
 ## Données utilisées
 

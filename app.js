@@ -36,7 +36,7 @@ const SUBNAV = {
     { label: 'Équipe 2', target: 'teams-list' },
   ],
   news: [
-    { label: 'Actualités', text: 'Aucune publication' },
+    { label: 'Actualités', text: 'Aucune actualité publiée pour l’instant' },
   ],
 };
 
@@ -60,6 +60,7 @@ const state = {
 };
 
 const CACHE_KEY = 'essa-web-app:v1:last-known-good';
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const clubLogoSrc = '/logo-essa.svg';
 
 const primaryNav = document.querySelector('#primary-nav');
@@ -67,14 +68,24 @@ const subnav = document.querySelector('#subnav');
 const homeSection = document.querySelector('#page-home');
 const pageSections = [...document.querySelectorAll('.page')];
 const dataStatus = document.querySelector('#data-status');
+const refreshDataButton = document.querySelector('#refresh-data');
 const standingsAsOf = new URL(window.location.href).searchParams.get('asOf') || new Date().toISOString().slice(0, 10);
 
 function readCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return { snapshot: null, expired: false };
+
+    const snapshot = JSON.parse(raw);
+    const fetchedAt = snapshot?.fetchedAt ? Date.parse(snapshot.fetchedAt) : NaN;
+    if (Number.isNaN(fetchedAt) || Date.now() - fetchedAt > CACHE_TTL_MS) {
+      localStorage.removeItem(CACHE_KEY);
+      return { snapshot: null, expired: true };
+    }
+
+    return { snapshot, expired: false };
   } catch {
-    return null;
+    return { snapshot: null, expired: false };
   }
 }
 
@@ -94,6 +105,12 @@ function snapshotState() {
     standings: state.standings,
     fetchedAt: new Date().toISOString(),
   };
+}
+
+function setRefreshLoading(isLoading) {
+  if (!refreshDataButton) return;
+  refreshDataButton.disabled = isLoading;
+  refreshDataButton.textContent = isLoading ? 'Rafraîchissement...' : 'Rafraîchir les données';
 }
 
 function applySnapshot(snapshot) {
@@ -444,7 +461,8 @@ function renderTeam(team) {
 }
 
 function renderTeams(listEl, teams) {
-  listEl.innerHTML = teams.length ? teams.map(renderTeam).join('') : '<div class="card card--empty">Aucune équipe trouvée.</div>';
+  const emptyMessage = state.club ? 'Aucune équipe trouvée.' : 'Aucune donnée équipe disponible pour le moment.';
+  listEl.innerHTML = teams.length ? teams.map(renderTeam).join('') : `<div class="card card--empty">${emptyMessage}</div>`;
 }
 
 function renderStandingsTable(tbody, rows) {
@@ -469,6 +487,7 @@ function renderStandingsTable(tbody, rows) {
 }
 
 function renderStandingsBlock({ title, metaId, countId, tableId, rows, extraHeader = '' }) {
+  const emptyMessage = state.club ? 'Aucun classement calculable pour le moment.' : 'Classement indisponible tant que les données ne sont pas chargées.';
   return `
     <article class="standings-block">
       <div class="section__title section__title--tight standings-block__head">
@@ -513,7 +532,7 @@ function renderStandingsBlock({ title, metaId, countId, tableId, rows, extraHead
                 <td>${row.penalties}</td>
                 <td>${row.diff > 0 ? `+${row.diff}` : row.diff}</td>
               </tr>
-            `).join('') : '<tr><td colspan="12" class="standings-empty">Aucun classement calculable pour le moment.</td></tr>'}
+            `).join('') : `<tr><td colspan="12" class="standings-empty">${emptyMessage}</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -571,6 +590,9 @@ function renderLists() {
   const groups = groupByDate(calendarMatches);
   const groupKeys = Object.keys(groups).sort();
   const showGroupCounts = state.calendarFilter === 'all';
+  const calendarEmptyMessage = state.club
+    ? 'Aucune rencontre à afficher.'
+    : 'Les rencontres du club s\u2019afficheront ici dès que les données seront disponibles.';
   calendarList.innerHTML = groupKeys.length
     ? groupKeys.map((key) => `
         <div>
@@ -584,9 +606,12 @@ function renderLists() {
           <div class="list">${groups[key].map(renderMatch).join('')}</div>
         </div>
       `).join('')
-    : '<div class="card card--empty">Aucune rencontre à afficher.</div>';
+    : `<div class="card card--empty">${calendarEmptyMessage}</div>`;
 
-  resultsList.innerHTML = resultsMatches.length ? resultsMatches.map(renderMatch).join('') : '<div class="card card--empty">Aucun résultat à afficher.</div>';
+  const resultsEmptyMessage = state.club
+    ? 'Aucun résultat à afficher.'
+    : 'Les résultats du club s\u2019afficheront ici dès que les données seront disponibles.';
+  resultsList.innerHTML = resultsMatches.length ? resultsMatches.map(renderMatch).join('') : `<div class="card card--empty">${resultsEmptyMessage}</div>`;
 
   const next = state.calendar[0];
   const last = resultsMatches[0];
@@ -635,58 +660,67 @@ async function loadCollection(path, { page = 1 } = {}) {
 }
 
 async function loadData() {
-  const cachedSnapshot = readCache();
-  if (cachedSnapshot) {
-    applySnapshot(cachedSnapshot);
-    setDataStatus('Dernières données mises en cache');
-  } else {
-    setDataStatus('Chargement des données du club...');
-  }
+  setRefreshLoading(true);
+  try {
+    const { snapshot: cachedSnapshot, expired: cacheExpired } = readCache();
+    if (cachedSnapshot) {
+      applySnapshot(cachedSnapshot);
+      setDataStatus('Dernières données mises en cache');
+    } else if (cacheExpired) {
+      setDataStatus('Cache expiré, rechargement...');
+    } else {
+      setDataStatus('Chargement des données du club...');
+    }
 
-  const [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches] = await Promise.allSettled([
-    loadJson(`/api/clubs/${CLUB_ID}`),
-    loadCollection(`/api/clubs/${CLUB_ID}/matchs`),
-    loadJson(`/api/clubs/${CLUB_ID}/equipes`),
-    loadCollection(`/api/compets/436831/phases/1/poules/1/matchs`),
-    loadCollection(`/api/compets/436833/phases/1/poules/1/matchs`),
-    loadCollection(`/api/compets/448025/phases/1/poules/1/matchs`),
-  ]);
+    const [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches] = await Promise.allSettled([
+      loadJson(`/api/clubs/${CLUB_ID}`),
+      loadCollection(`/api/clubs/${CLUB_ID}/matchs`),
+      loadJson(`/api/clubs/${CLUB_ID}/equipes`),
+      loadCollection(`/api/compets/436831/phases/1/poules/1/matchs`),
+      loadCollection(`/api/compets/436833/phases/1/poules/1/matchs`),
+      loadCollection(`/api/compets/448025/phases/1/poules/1/matchs`),
+    ]);
 
-  const failures = [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches].filter((result) => result.status === 'rejected');
-  const value = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
-  const cachedStandings = cachedSnapshot?.standings || { team1: [], team2: { 1: [], 2: [] } };
+    const failures = [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches].filter((result) => result.status === 'rejected');
+    const value = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
+    const cachedStandings = cachedSnapshot?.standings || { team1: [], team2: { 1: [], 2: [] } };
 
-  const clubData = value(club, cachedSnapshot?.club || {});
-  const matchesData = value(matches, cachedSnapshot?.matches || []);
-  const teamsData = value(teams, { 'hydra:member': cachedSnapshot?.teams || [] });
-  const team1Data = value(team1Matches, cachedStandings.team1 || []);
-  const team2Level1Data = value(team2Level1Matches, cachedStandings.team2?.[1] || []);
-  const team2Level2Data = value(team2Level2Matches, cachedStandings.team2?.[2] || []);
+    const clubData = value(club, cachedSnapshot?.club || {});
+    const matchesData = value(matches, cachedSnapshot?.matches || []);
+    const teamsData = value(teams, { 'hydra:member': cachedSnapshot?.teams || [] });
+    const team1Data = value(team1Matches, cachedStandings.team1 || []);
+    const team2Level1Data = value(team2Level1Matches, cachedStandings.team2?.[1] || []);
+    const team2Level2Data = value(team2Level2Matches, cachedStandings.team2?.[2] || []);
 
-  state.club = clubData;
-  state.matches = Array.isArray(matchesData) ? matchesData : (matchesData['hydra:member'] || []);
-  state.calendar = state.matches.filter(isUpcoming).sort(sortByDateAsc);
-  state.teams = teamsData['hydra:member'] || [];
-  state.standings = {
-    team1: buildStandings(team1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
-    team2: {
-      1: buildStandings(team2Level1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
-      2: buildStandings(team2Level2Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
-    },
-  };
+    state.club = clubData;
+    state.matches = Array.isArray(matchesData) ? matchesData : (matchesData['hydra:member'] || []);
+    state.calendar = state.matches.filter(isUpcoming).sort(sortByDateAsc);
+    state.teams = teamsData['hydra:member'] || [];
+    state.standings = {
+      team1: buildStandings(team1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
+      team2: {
+        1: buildStandings(team2Level1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
+        2: buildStandings(team2Level2Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
+      },
+    };
 
-  applySnapshot(snapshotState());
-  const heroImage = document.querySelector('#hero-image');
-  if (heroImage) heroImage.dataset.visual = 'future-image-slot';
+    applySnapshot(snapshotState());
+    const heroImage = document.querySelector('#hero-image');
+    if (heroImage) heroImage.dataset.visual = 'future-image-slot';
 
-  writeCache(snapshotState());
+    if (failures.length === 0 || cachedSnapshot) {
+      writeCache(snapshotState());
+    }
 
-  if (failures.length > 0 && cachedSnapshot) {
-    setDataStatus(failures.length === 6 ? 'Données affichées depuis le cache' : 'Données mises à jour partiellement depuis l’API');
-  } else if (failures.length > 0) {
-    setDataStatus(`${failures.length} source${failures.length > 1 ? 's' : ''} indisponible${failures.length > 1 ? 's' : ''}`, 'error');
-  } else {
-    setDataStatus('Données chargées');
+    if (failures.length > 0 && cachedSnapshot) {
+      setDataStatus(failures.length === 6 ? 'Données affichées depuis le cache' : 'Données mises à jour partiellement depuis l’API');
+    } else if (failures.length > 0) {
+      setDataStatus(`${failures.length} source${failures.length > 1 ? 's' : ''} indisponible${failures.length > 1 ? 's' : ''}`, 'error');
+    } else {
+      setDataStatus('Données chargées');
+    }
+  } finally {
+    setRefreshLoading(false);
   }
 }
 
@@ -701,6 +735,16 @@ document.querySelectorAll('[data-page-link]').forEach((button) => {
 document.querySelector('#enter-site')?.addEventListener('click', () => {
   setActivePage('calendar');
   document.getElementById('page-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+refreshDataButton?.addEventListener('click', () => {
+  localStorage.removeItem(CACHE_KEY);
+  loadData().catch((error) => {
+    console.error(error);
+    document.querySelector('#club-meta').textContent = 'Erreur de chargement des données API';
+    setDataStatus('Chargement impossible', 'error');
+    document.querySelector('#club-logo-top').src = clubLogoSrc;
+  });
 });
 
 document.querySelectorAll('.topbar__nav [data-page]').forEach((button) => {
