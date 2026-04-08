@@ -46,6 +46,11 @@ npm run build
 - bouton de rafraîchissement manuel
 - empty states plus explicites sur les pages publiques
 
+## `v1.2.0`
+
+- tests unitaires des transformations de données et du cache
+- workflow CI pour `npm test` et `npm run build`
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`

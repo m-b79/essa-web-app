@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Added unit tests for data transforms and cache helpers.
+- Added CI workflow for build and test checks.
+
 ## 1.1.0
 
 - Added a 24h `localStorage` fallback cache with manual refresh.
