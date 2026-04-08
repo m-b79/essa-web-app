@@ -8,9 +8,10 @@
   </head>
   <body>
     <div class="app-shell">
+      <a class="skip-link" href="#page-home">Aller au contenu</a>
       <header class="topbar">
         <a class="topbar__brand" href="#home" data-page-link="home">
-          <span class="topbar__crest"><img id="club-logo-top" alt="Logo ESSA" /></span>
+          <span class="topbar__crest"><img id="club-logo-top" src="/logo-essa.svg" alt="Logo ESSA" /></span>
           <span class="topbar__text">
             <strong>ESSA</strong>
             <span>Etoile Sportive St Amand Sur Sevre</span>
@@ -19,7 +20,6 @@
 
         <nav class="topbar__nav" id="primary-nav" aria-label="Navigation principale"></nav>
 
-        <button class="topbar__auth" id="connect-button" type="button">Connexion</button>
       </header>
 
       <div class="subnav" id="subnav" aria-label="Navigation secondaire"></div>
@@ -42,6 +42,9 @@
                 <p class="home-hero__kicker">Club · Football · ESSA</p>
                 <h2>Une vitrine éditoriale, un accès direct à l'essentiel.</h2>
                 <p class="home-hero__copy" id="club-meta">Chargement du club...</p>
+                <p class="home-hero__status">
+                  <span class="badge badge--ghost" id="data-status" role="status" aria-live="polite">Chargement des données...</span>
+                </p>
                 <div class="home-hero__actions">
                   <button class="action-btn action-btn--primary" id="enter-site" type="button">Entrer sur le site</button>
                   <button class="action-btn action-btn--secondary" data-page-link="calendar" type="button">Voir le calendrier</button>
@@ -120,29 +123,6 @@
             </article>
           </div>
 
-          <section class="home-section" id="admin-hub">
-            <div class="section__title section__title--tight">
-              <div>
-                <h2>Éspace connecté</h2>
-                <p class="muted">Prévu pour publier, administrer et enrichir le contenu plus tard.</p>
-              </div>
-              <span class="badge badge--ghost">Privé</span>
-            </div>
-            <div class="admin-grid">
-              <article class="admin-card">
-                <strong>Connexion</strong>
-                <p class="muted">Zone réservée aux membres du club et aux contributeurs.</p>
-              </article>
-              <article class="admin-card">
-                <strong>Publier une actu</strong>
-                <p class="muted">Slot prêt pour les nouvelles, communiqués et annonces.</p>
-              </article>
-              <article class="admin-card">
-                <strong>Gérer la home</strong>
-                <p class="muted">Emplacement prévu pour les modules éditoriaux et les bannières.</p>
-              </article>
-            </div>
-          </section>
         </section>
 
         <section class="page" id="page-calendar" data-page="calendar">

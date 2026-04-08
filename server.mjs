@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { extname, join, resolve, sep } from 'node:path';
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
@@ -24,9 +24,19 @@ function send(res, status, body, headers = {}) {
 }
 
 async function serveStatic(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
-  const filePath = join(root, pathname);
+  const rawPath = req.url || '/';
+  if (/(?:^|\/)(?:\.\.|%2e%2e)(?:\/|$)/i.test(rawPath)) {
+    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' });
+  }
+
+  const url = new URL(rawPath, `http://${req.headers.host}`);
+  const pathname = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+  const filePath = resolve(root, `.${pathname}`);
+
+  if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) {
+    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' });
+  }
+
   try {
     const data = await readFile(filePath);
     send(res, 200, data, {

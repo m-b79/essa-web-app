@@ -15,7 +15,6 @@ const SUBNAV = {
     { label: 'À la une', target: 'page-home' },
     { label: 'Calendrier', page: 'calendar' },
     { label: 'Équipes', page: 'teams' },
-    { label: 'Connexion', target: 'admin-hub' },
   ],
   calendar: [
     { label: 'Tous', filter: 'all' },
@@ -60,12 +59,72 @@ const state = {
   page: 'home',
 };
 
+const CACHE_KEY = 'essa-web-app:v1:last-known-good';
+const clubLogoSrc = '/logo-essa.svg';
+
 const primaryNav = document.querySelector('#primary-nav');
 const subnav = document.querySelector('#subnav');
-const connectButton = document.querySelector('#connect-button');
 const homeSection = document.querySelector('#page-home');
 const pageSections = [...document.querySelectorAll('.page')];
+const dataStatus = document.querySelector('#data-status');
 const standingsAsOf = new URL(window.location.href).searchParams.get('asOf') || new Date().toISOString().slice(0, 10);
+
+function readCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(snapshot) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot));
+  } catch {
+    // Ignore quota / privacy mode failures.
+  }
+}
+
+function snapshotState() {
+  return {
+    club: state.club,
+    matches: state.matches,
+    teams: state.teams,
+    standings: state.standings,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+function applySnapshot(snapshot) {
+  if (!snapshot) return false;
+
+  state.club = snapshot.club || null;
+  state.matches = Array.isArray(snapshot.matches) ? snapshot.matches : [];
+  state.calendar = state.matches.filter(isUpcoming).sort(sortByDateAsc);
+  state.teams = Array.isArray(snapshot.teams) ? snapshot.teams : [];
+  state.standings = snapshot.standings || {
+    team1: [],
+    team2: { 1: [], 2: [] },
+  };
+
+  if (state.club && (state.club.short_name || state.club.district?.name || state.club.cl_no)) {
+    document.querySelector('#club-meta').textContent = `${state.club.district?.name || ''} · ${state.club.short_name || ''} · club ${state.club.cl_no || CLUB_ID}`;
+  }
+  document.querySelector('#club-logo-top').src = clubLogoSrc;
+
+  document.querySelector('#welcome-calendar-title').textContent = `${state.calendar.length} matchs programmés`;
+  document.querySelector('#welcome-calendar-details').textContent = `Vue directe sur les prochaines rencontres du club.`;
+  const essaStanding = state.standings.team1?.find?.((row) => row.clubNo === CLUB_ID);
+  document.querySelector('#welcome-standing-title').textContent = essaStanding ? `Position ${essaStanding.rank}` : 'Position du club';
+  document.querySelector('#welcome-standing-details').textContent = essaStanding ? `ESSA est ${essaStanding.rank}e avec ${essaStanding.points} pts.` : 'Classement calculé depuis la poule.';
+  document.querySelector('#welcome-teams-title').textContent = `${state.teams.length} équipes au club`;
+  document.querySelector('#welcome-teams-details').textContent = state.teams.length ? `${state.teams[0].short_name || 'Équipe 1'} en tête, puis la réserve et les futures équipes.` : 'Structure en cours de chargement.';
+
+  renderLists();
+  renderStandings();
+  return true;
+}
 
 function parseDate(value) {
   const date = value ? new Date(value) : null;
@@ -304,6 +363,13 @@ function renderSubnav() {
   });
 }
 
+function setDataStatus(message, tone = 'loading') {
+  if (!dataStatus) return;
+  dataStatus.textContent = message;
+  dataStatus.classList.toggle('badge--error', tone === 'error');
+  dataStatus.classList.toggle('badge--ghost', tone !== 'error');
+}
+
 function setCalendarFilter(filter) {
   state.calendarFilter = filter;
   renderSubnav();
@@ -366,7 +432,7 @@ function renderTeam(team) {
     <article class="team-card ${team.number === 1 ? 'team-card--featured' : ''}">
       <div class="team-card__top">
         <strong>${team.number === 1 ? 'Équipe 1' : team.number === 2 ? 'Équipe 2' : `Équipe ${team.number || ''}`}</strong>
-        <span class="pill">${team.category_label || team.category_code || 'Equipe'}</span>
+        <span class="pill">${team.category_label || team.category_code || 'Équipe'}</span>
       </div>
       <h3>${team.short_name || TEAM_FALLBACK_NAME}</h3>
       <div class="team-card__meta">
@@ -542,8 +608,15 @@ function renderLists() {
 
 async function loadJson(path) {
   const response = await fetch(path, { headers: { Accept: 'application/ld+json, application/json;q=0.9, */*;q=0.8' } });
-  if (!response.ok) throw new Error(`${path} -> ${response.status}`);
-  return response.json();
+  if (!response.ok) {
+    throw new Error(`${path} -> ${response.status}`);
+  }
+
+  try {
+    return await response.json();
+  } catch (error) {
+    throw new Error(`${path} -> invalid JSON (${error instanceof Error ? error.message : String(error)})`);
+  }
 }
 
 async function loadCollection(path, { page = 1 } = {}) {
@@ -562,7 +635,15 @@ async function loadCollection(path, { page = 1 } = {}) {
 }
 
 async function loadData() {
-  const [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches] = await Promise.all([
+  const cachedSnapshot = readCache();
+  if (cachedSnapshot) {
+    applySnapshot(cachedSnapshot);
+    setDataStatus('Dernières données mises en cache');
+  } else {
+    setDataStatus('Chargement des données du club...');
+  }
+
+  const [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches] = await Promise.allSettled([
     loadJson(`/api/clubs/${CLUB_ID}`),
     loadCollection(`/api/clubs/${CLUB_ID}/matchs`),
     loadJson(`/api/clubs/${CLUB_ID}/equipes`),
@@ -571,38 +652,43 @@ async function loadData() {
     loadCollection(`/api/compets/448025/phases/1/poules/1/matchs`),
   ]);
 
-  state.club = club;
-  state.matches = Array.isArray(matches) ? matches : (matches['hydra:member'] || []);
+  const failures = [club, matches, teams, team1Matches, team2Level1Matches, team2Level2Matches].filter((result) => result.status === 'rejected');
+  const value = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
+  const cachedStandings = cachedSnapshot?.standings || { team1: [], team2: { 1: [], 2: [] } };
+
+  const clubData = value(club, cachedSnapshot?.club || {});
+  const matchesData = value(matches, cachedSnapshot?.matches || []);
+  const teamsData = value(teams, { 'hydra:member': cachedSnapshot?.teams || [] });
+  const team1Data = value(team1Matches, cachedStandings.team1 || []);
+  const team2Level1Data = value(team2Level1Matches, cachedStandings.team2?.[1] || []);
+  const team2Level2Data = value(team2Level2Matches, cachedStandings.team2?.[2] || []);
+
+  state.club = clubData;
+  state.matches = Array.isArray(matchesData) ? matchesData : (matchesData['hydra:member'] || []);
   state.calendar = state.matches.filter(isUpcoming).sort(sortByDateAsc);
-  state.teams = teams['hydra:member'] || [];
+  state.teams = teamsData['hydra:member'] || [];
   state.standings = {
-    team1: buildStandings((team1Matches || []).filter(hasResult).filter(isOnOrBeforeAsOf)),
+    team1: buildStandings(team1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
     team2: {
-      1: buildStandings((team2Level1Matches || []).filter(hasResult).filter(isOnOrBeforeAsOf)),
-      2: buildStandings((team2Level2Matches || []).filter(hasResult).filter(isOnOrBeforeAsOf)),
+      1: buildStandings(team2Level1Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
+      2: buildStandings(team2Level2Data.filter(hasResult).filter(isOnOrBeforeAsOf)),
     },
   };
 
-  document.querySelector('#club-meta').textContent = `${club.district?.name || ''} · ${club.short_name || ''} · club ${club.cl_no || CLUB_ID}`;
-  document.querySelector('#club-logo-top').src = club.logo || 'https://placehold.co/160x160/111111/FFD400?text=ESSA';
+  applySnapshot(snapshotState());
   const heroImage = document.querySelector('#hero-image');
   if (heroImage) heroImage.dataset.visual = 'future-image-slot';
 
-  document.querySelector('#welcome-calendar-title').textContent = `${state.calendar.length} matchs programmés`;
-  document.querySelector('#welcome-calendar-details').textContent = `Vue directe sur les prochaines rencontres du club.`;
-  const essaStanding = state.standings.team1.find((row) => row.clubNo === CLUB_ID);
-  document.querySelector('#welcome-standing-title').textContent = essaStanding ? `Position ${essaStanding.rank}` : 'Position du club';
-  document.querySelector('#welcome-standing-details').textContent = essaStanding ? `ESSA est ${essaStanding.rank}e avec ${essaStanding.points} pts.` : 'Classement calculé depuis la poule.';
-  document.querySelector('#welcome-teams-title').textContent = `${state.teams.length} équipes au club`;
-  document.querySelector('#welcome-teams-details').textContent = state.teams.length ? `${state.teams[0].short_name || 'Équipe 1'} en tête, puis la réserve et les futures équipes.` : 'Structure en cours de chargement.';
+  writeCache(snapshotState());
 
-  renderLists();
-  renderStandings();
+  if (failures.length > 0 && cachedSnapshot) {
+    setDataStatus(failures.length === 6 ? 'Données affichées depuis le cache' : 'Données mises à jour partiellement depuis l’API');
+  } else if (failures.length > 0) {
+    setDataStatus(`${failures.length} source${failures.length > 1 ? 's' : ''} indisponible${failures.length > 1 ? 's' : ''}`, 'error');
+  } else {
+    setDataStatus('Données chargées');
+  }
 }
-
-connectButton?.addEventListener('click', () => {
-  document.getElementById('admin-hub')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
 
 document.querySelectorAll('[data-page-link]').forEach((button) => {
   button.addEventListener('click', () => {
@@ -610,6 +696,11 @@ document.querySelectorAll('[data-page-link]').forEach((button) => {
     setActivePage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+});
+
+document.querySelector('#enter-site')?.addEventListener('click', () => {
+  setActivePage('calendar');
+  document.getElementById('page-calendar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 document.querySelectorAll('.topbar__nav [data-page]').forEach((button) => {
@@ -635,5 +726,6 @@ renderSubnav();
 loadData().catch((error) => {
   console.error(error);
   document.querySelector('#club-meta').textContent = 'Erreur de chargement des données API';
-  document.querySelector('#club-logo-top').src = 'https://placehold.co/160x160/111111/FFD400?text=ESSA';
+  setDataStatus('Chargement impossible', 'error');
+  document.querySelector('#club-logo-top').src = clubLogoSrc;
 });
