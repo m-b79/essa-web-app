@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- Added a social footer with Instagram and Facebook links.
+
 ## 1.4.0
 
 - Added a dedicated `Le club` page with the visible club identity and practical details.

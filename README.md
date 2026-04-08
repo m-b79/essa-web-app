@@ -66,6 +66,10 @@ npm run build
 - accueil allégé avec un simple repère `Depuis 1938`
 - infos pratiques déplacées vers la page du club
 
+## `v1.4.1`
+
+- footer social avec Instagram et Facebook
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`
