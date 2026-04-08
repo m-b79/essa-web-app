@@ -56,6 +56,10 @@ npm run build
 - hero mobile plus compact
 - tableau de classement allégé sur petit écran
 
+## `v1.3.1`
+
+- identité visible alignée sur ESSA et Saint-Amantaise
+
 ## Données utilisées
 
 - `GET /api/clubs/5844`

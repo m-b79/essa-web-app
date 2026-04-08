@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+
+- Updated the visible club identity to match ESSA / Saint-Amantaise naming.
+
 ## 1.3.0
 
 - Improved the mobile hero layout and CTA stacking.

@@ -62,6 +62,13 @@ const state = {
 const CACHE_KEY = 'essa-web-app:v1:last-known-good';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const clubLogoSrc = '/logo-essa.svg';
+const CLUB_PROFILE = {
+  longName: 'Étoile sportive Saint-Amantaise',
+  city: 'Saint-Amand-sur-Sèvre',
+  founded: '1938',
+  stadium: 'Stade municipal',
+  address: 'Café des Sports, 79700 Saint-Amand-sur-Sèvre - France',
+};
 
 const primaryNav = document.querySelector('#primary-nav');
 const subnav = document.querySelector('#subnav');
@@ -125,9 +132,9 @@ function applySnapshot(snapshot) {
     team2: { 1: [], 2: [] },
   };
 
-  if (state.club && (state.club.short_name || state.club.district?.name || state.club.cl_no)) {
-    document.querySelector('#club-meta').textContent = `${state.club.district?.name || ''} · ${state.club.short_name || ''} · club ${state.club.cl_no || CLUB_ID}`;
-  }
+  document.querySelector('#club-meta').textContent = `${CLUB_PROFILE.city} · Fondation ${CLUB_PROFILE.founded} · ${CLUB_PROFILE.stadium}`;
+  const clubTitleLong = document.querySelector('#club-title-long');
+  if (clubTitleLong) clubTitleLong.textContent = CLUB_PROFILE.longName;
   document.querySelector('#club-logo-top').src = clubLogoSrc;
 
   document.querySelector('#welcome-calendar-title').textContent = `${state.calendar.length} matchs programmés`;
